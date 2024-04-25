@@ -5,6 +5,16 @@ import (
 	"tiny-db/tools"
 )
 
+/**
+Node layout:
+| type | nkeys | pointers   | offsets    | key-values
+| 2B   | 2B    | nkeys * 8B | nkeys * 2B | ...
+
+Key-Value layout:
+| klen | vlen | key | val |
+| 2B   | 2B   | ... | ... |
+*/
+
 type BNode struct {
 	data []byte
 }
@@ -28,13 +38,14 @@ func (node BNode) setHeader(btype uint16, nkeys uint16) {
 	binary.LittleEndian.PutUint16(node.data[2:4], nkeys)
 }
 
-// pointers
+// Get pointer by index
 func (node BNode) getPtr(idx uint16) uint64 {
 	tools.Assert(idx < node.nkeys())
 	pos := HEADER + 8*idx
 	return binary.LittleEndian.Uint64(node.data[pos:])
 }
 
+// Set pointer by index
 func (node BNode) setPtr(idx uint16, val uint64) {
 	tools.Assert(idx < node.nkeys())
 	pos := HEADER + 8*idx
